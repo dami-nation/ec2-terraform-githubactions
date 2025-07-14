@@ -80,7 +80,7 @@ jobs:
       - name: Terraform Init (with backend)
         run: |
           terraform -chdir=infra init \
-            -backend-config="bucket=realcloud-tfstate-bucket-001" \
+            -backend-config="bucket=dami-tfstate-bucket" \
             -backend-config="key=ec2-infra/terraform.tfstate" \
             -backend-config="region=us-east-1"
 
