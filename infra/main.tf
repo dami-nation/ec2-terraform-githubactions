@@ -6,7 +6,6 @@ data "aws_vpc" "default" {
   default = true
 }
 
-
 resource "tls_private_key" "ssh_key" {
   algorithm = "RSA"
   rsa_bits  = 2048
@@ -22,7 +21,6 @@ resource "aws_security_group" "ec2_sg" {
   description = "Allow SSH, HTTP, HTTPS, and app ports"
   vpc_id      = data.aws_vpc.default.id
 
-  # Inbound Rules
   ingress {
     description = "SSH"
     from_port   = 22
@@ -62,21 +60,23 @@ resource "aws_security_group" "ec2_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
   ingress {
-    description = "DB Port 9090"
+    description = "DB Port 3306"
     from_port   = 3306
     to_port     = 3306
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
- ingress {
+  ingress {
     description = "kube apiserver"
     from_port   = 6443
     to_port     = 6443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
- }
+  }
+
   ingress {
     description = "Kube Etcd"
     from_port   = 2379
@@ -86,26 +86,29 @@ resource "aws_security_group" "ec2_sg" {
   }
 
   ingress {
-    description = "Kubelet "
+    description = "Kubelet"
     from_port   = 10250
     to_port     = 10250
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
   ingress {
-    description = "Kube Controller Manager "
+    description = "Kube Controller Manager"
     from_port   = 10257
     to_port     = 10257
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
   ingress {
-    description = "Kube Controller Scheduler "
+    description = "Kube Scheduler"
     from_port   = 10259
     to_port     = 10259
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
   ingress {
     description = "NodePort Services"
     from_port   = 30000
@@ -114,8 +117,6 @@ resource "aws_security_group" "ec2_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-
-# Outbound Rules - Allow all
   egress {
     from_port   = 0
     to_port     = 0
@@ -141,23 +142,24 @@ data "aws_ami" "ubuntu" {
     values = ["hvm"]
   }
 
-  owners = ["099720109477"] # Canonical (Ubuntu)
+  owners = ["099720109477"]
 }
 
 resource "aws_instance" "master" {
-  ami           = "data.aws_ami.ubuntu.id"
-  instance_type = var.instance_type_master
-  key_name      = aws_key_pair.generated_key.key_name
+  ami                         = data.aws_ami.ubuntu.id
+  instance_type               = var.instance_type_master
+  key_name                    = aws_key_pair.generated_key.key_name
   vpc_security_group_ids      = [aws_security_group.ec2_sg.id]
 
   tags = {
     Name = "Master-Node"
   }
 }
+
 resource "aws_instance" "worker-node-1" {
-  ami           = "data.aws_ami.ubuntu.id"
-  instance_type = var.instance_type
-  key_name      = aws_key_pair.generated_key.key_name
+  ami                         = data.aws_ami.ubuntu.id
+  instance_type               = var.instance_type
+  key_name                    = aws_key_pair.generated_key.key_name
   vpc_security_group_ids      = [aws_security_group.ec2_sg.id]
 
   tags = {
@@ -166,10 +168,10 @@ resource "aws_instance" "worker-node-1" {
 }
 
 resource "aws_instance" "worker-node-2" {
-  ami           = "data.aws_ami.ubuntu.id"
-  instance_type = var.instance_type
-  key_name      = aws_key_pair.generated_key.key_name
-  vpc_security_group_ids = [aws_security_group.ec2_sg.id]
+  ami                         = data.aws_ami.ubuntu.id
+  instance_type               = var.instance_type
+  key_name                    = aws_key_pair.generated_key.key_name
+  vpc_security_group_ids      = [aws_security_group.ec2_sg.id]
 
   tags = {
     Name = "Worker-Node-2"
