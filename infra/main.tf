@@ -143,6 +143,14 @@ data "aws_ami" "ubuntu" {
 
   owners = ["099720109477"] # Canonical (Ubuntu)
 }
+resource "aws_s3_bucket" "tfstate" {
+  bucket = "dami-tfstate-bucket"
+  force_destroy = true
+
+  tags = {
+    Name = "Terraform State Bucket"
+  }
+}
 
 resource "aws_instance" "master" {
   ami           = "data.aws_ami.ubuntu.id"
