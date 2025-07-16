@@ -80,36 +80,32 @@ jobs:
       - name: Terraform Init (with backend)
         run: |
           terraform -chdir=infra init \
-            -backend-config="bucket=dami-tfstate-bucket" \
-            -backend-config="key=ec2-infra/terraform.tfstate" \
-            -backend-config="region=us-east-1"
+            -backend-config="bucket=${{ env.BUCKET_NAME }}" \
+            -backend-config="key=${{ env.TF_KEY }}" \
+            -backend-config="region=${{ env.AWS_REGION }}"
 
-      - name: Terraform Destroy
+      - name: Terraform Apply
         working-directory: infra
-        run: terraform destroy -auto-approve -input=false || true
+        run: terraform apply -auto-approve -input=false
 
-#      - name: Terraform Apply
-#        working-directory: infra
-#        run: terraform apply -auto-approve -input=false
-#
-#      - name: Create A Dir
-#        working-directory: infra
-#        run: |
-#            mkdir -p tf-artifacts
-#            mkdir -p tf-artifacts/public
-#            terraform output -raw private_key_pem > tf-artifacts/ec2_key.pem
-#            chmod 600 tf-artifacts/ec2_key.pem
-#            terraform output -raw public_key_openssh > tf-artifacts/public/ec2_key.pub
-#            chmod 644 tf-artifacts/ec2_key.pub
-#
-#      - name: Upload SSH Private Key as Artifact
-#        uses: actions/upload-pages-artifact@v3
-#        with:
-#          name: ec2-private-key
-#          path: infra/tf-artifacts/
-#
-#      - name: Upload SSH Public Key as Artifact
-#        uses: actions/upload-pages-artifact@v3
-#        with:
-#          name: ec2-public-key
-#          path: infra/tf-artifacts/public
+      - name: Extract Private/Public Keys
+        working-directory: infra
+        run: |
+          mkdir -p tf-artifacts
+          terraform output -raw private_key_pem > tf-artifacts/ec2_key.pem
+          chmod 600 tf-artifacts/ec2_key.pem
+          terraform output -raw public_key_openssh > tf-artifacts/ec2_key.pub
+          chmod 644 tf-artifacts/ec2_key.pub
+
+      - name: Upload Private Key as Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ec2-private-key
+          path: infra/tf-artifacts/ec2_key.pem
+
+      - name: Upload Public Key as Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ec2-public-key
+          path: infra/tf-artifacts/ec2_key.pub
+
