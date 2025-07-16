@@ -1,3 +1,18 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+    tls = {
+      source  = "hashicorp/tls"
+      version = "~> 4.0"
+    }
+  }
+
+  required_version = ">= 1.0.0"
+}
+
 provider "aws" {
   region = var.region
 }
@@ -146,10 +161,10 @@ data "aws_ami" "ubuntu" {
 }
 
 resource "aws_instance" "master" {
-  ami                         = data.aws_ami.ubuntu.id
-  instance_type               = var.instance_type_master
-  key_name                    = aws_key_pair.generated_key.key_name
-  vpc_security_group_ids      = [aws_security_group.ec2_sg.id]
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = var.instance_type_master
+  key_name               = aws_key_pair.generated_key.key_name
+  vpc_security_group_ids = [aws_security_group.ec2_sg.id]
 
   tags = {
     Name = "Master-Node"
@@ -157,10 +172,10 @@ resource "aws_instance" "master" {
 }
 
 resource "aws_instance" "worker-node-1" {
-  ami                         = data.aws_ami.ubuntu.id
-  instance_type               = var.instance_type
-  key_name                    = aws_key_pair.generated_key.key_name
-  vpc_security_group_ids      = [aws_security_group.ec2_sg.id]
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = var.instance_type
+  key_name               = aws_key_pair.generated_key.key_name
+  vpc_security_group_ids = [aws_security_group.ec2_sg.id]
 
   tags = {
     Name = "Worker-Node-1"
@@ -168,10 +183,10 @@ resource "aws_instance" "worker-node-1" {
 }
 
 resource "aws_instance" "worker-node-2" {
-  ami                         = data.aws_ami.ubuntu.id
-  instance_type               = var.instance_type
-  key_name                    = aws_key_pair.generated_key.key_name
-  vpc_security_group_ids      = [aws_security_group.ec2_sg.id]
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = var.instance_type
+  key_name               = aws_key_pair.generated_key.key_name
+  vpc_security_group_ids = [aws_security_group.ec2_sg.id]
 
   tags = {
     Name = "Worker-Node-2"
