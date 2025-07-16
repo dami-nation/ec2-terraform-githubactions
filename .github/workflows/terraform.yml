@@ -96,16 +96,16 @@ jobs:
           chmod 600 tf-artifacts/ec2_key.pem
           terraform output -raw public_key_openssh > tf-artifacts/ec2_key.pub
           chmod 644 tf-artifacts/ec2_key.pub
-
       - name: Upload Private Key as Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ec2-private-key
           path: infra/tf-artifacts/ec2_key.pem
 
       - name: Upload Public Key as Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ec2-public-key
           path: infra/tf-artifacts/ec2_key.pub
+
 
