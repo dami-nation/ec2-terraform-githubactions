@@ -1,0 +1,111 @@
+name: Create S3 Bucket + Provision EC2 Instance
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+      - master
+    paths:
+      - 'bootstrap/**'
+      - 'infra/**'
+      - '.github/workflows/terraform.yml'
+
+env:
+  AWS_REGION: us-east-1
+  BUCKET_NAME: dami-tfstate-bucket
+  TF_KEY: ec2-infra/terraform.tfstate
+
+jobs:
+  bootstrap:
+    name: Create S3 Bucket for Terraform Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Check if S3 bucket exists
+        id: check_bucket
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+        run: |
+            if aws s3api head-bucket --bucket "dami-tfstate-bucket" 2>/dev/null; then
+              echo "exists=true" >> $GITHUB_ENV
+            else
+              echo "exists=false" >> $GITHUB_ENV
+            fi
+      - name: Init & Apply Bootstrap
+        if: steps.check_bucket.outputs.exists == 'false'
+        working-directory: bootstrap
+        run: |
+          terraform init
+          terraform apply -auto-approve -input=false
+
+  provision:
+    name: Provision EC2 + KeyPair
+    runs-on: ubuntu-latest
+    needs: bootstrap
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform Init (with backend)
+        run: |
+          terraform -chdir=infra init \
+            -backend-config="bucket=${{ env.BUCKET_NAME }}" \
+            -backend-config="key=${{ env.TF_KEY }}" \
+            -backend-config="region=${{ env.AWS_REGION }}"
+
+      - name: Terraform Apply
+        working-directory: infra
+        run: terraform apply -auto-approve -input=false
+
+      - name: Extract Private/Public Keys
+        working-directory: infra
+        run: |
+          mkdir -p tf-artifacts
+          terraform output -raw private_key_pem > tf-artifacts/ec2_key.pem
+          chmod 600 tf-artifacts/ec2_key.pem
+          terraform output -raw public_key_openssh > tf-artifacts/ec2_key.pub
+          chmod 644 tf-artifacts/ec2_key.pub
+      - name: Upload Private Key as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ec2-private-key
+          path: infra/tf-artifacts/ec2_key.pem
+
+      - name: Upload Public Key as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ec2-public-key
+          path: infra/tf-artifacts/ec2_key.pub
+
+
