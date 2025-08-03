@@ -160,35 +160,35 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"]
 }
 
-resource "aws_instance" "master" {
+resource "aws_instance" "nginx" {
   ami                    = data.aws_ami.ubuntu.id
-  instance_type          = var.instance_type_master
+  instance_type          = var.instance_type_nginx
   key_name               = aws_key_pair.generated_key.key_name
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
 
   tags = {
-    Name = "Master-Node"
+    Name = "Nginx Server"
   }
 }
 
-resource "aws_instance" "worker-node-1" {
+resource "aws_instance" "mysql" {
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = var.instance_type
   key_name               = aws_key_pair.generated_key.key_name
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
 
   tags = {
-    Name = "Worker-Node-1"
+    Name = "Database Server"
   }
 }
 
-resource "aws_instance" "worker-node-2" {
+resource "aws_instance" "apache" {
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = var.instance_type
   key_name               = aws_key_pair.generated_key.key_name
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
 
   tags = {
-    Name = "Worker-Node-2"
+    Name = "Apache Server"
   }
 }

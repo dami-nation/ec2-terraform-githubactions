@@ -9,11 +9,11 @@ variable "key_name" {
 }
 
 variable "instance_type" {
-  description = "Instance type for worker nodes"
+  description = "Instance type for Apache and My SQL"
   type        = string
 }
 
-variable "instance_type_master" {
+variable "instance_type_nginx" {
   description = "Instance type for master node"
   type        = string
 }
