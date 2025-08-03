@@ -14,6 +14,7 @@ variable "instance_type" {
 }
 
 variable "instance_type_nginx" {
-  description = "Instance type for master node"
+  description = "Instance type for ngnix"
   type        = string
+  default     = "t2.micro"
 }
