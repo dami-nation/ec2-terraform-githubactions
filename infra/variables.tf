@@ -13,7 +13,7 @@ variable "instance_type" {
   type        = string
 }
 
-variable "instance_type_nginx" {
-  description = "Instance type for ngnix"
-  type        = string
-}
+# variable "instance_type_master" {
+#   description = "Instance type for master"
+#   type        = string
+# }
